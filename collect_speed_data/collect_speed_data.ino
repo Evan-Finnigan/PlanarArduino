@@ -106,8 +106,7 @@ void setup() {
   attachInterrupt(1, rising1, RISING);
   attachInterrupt(0, rising0, RISING);
   Serial.print("START");
-
-  corner();
+  
   corner();
 }
 
@@ -281,13 +280,43 @@ void corner(){
     runMotor(4, 5, 6, motorOutput1); 
 
     //get it slightly out of the corner
+    runMotor(7, 8, 9, 0);
     runMotor(4, 5, 6, 70);
-    delay(200);
+    delay(100);
 
     runMotor(7, 8, 9, motorOutput0);
     runMotor(4, 5, 6, motorOutput1); 
 }
 
+//corners in the upper left
+void corner2(){
+    //put the carriage in the corner    
+    runMotor(7, 8, 9, -70);
+    runMotor(4, 5, 6, 70);
+    while(digitalRead(13) != HIGH){
+        delay(10);
+    }  
+
+    runMotor(7, 8, 9, -70);
+    runMotor(4, 5, 6, -70);
+    while(digitalRead(10) != HIGH){
+        delay(10);
+    }  
+    
+    motorOutput0 = 0;
+    motorOutput1 = 0;
+
+    runMotor(7, 8, 9, motorOutput0);
+    runMotor(4, 5, 6, motorOutput1); 
+
+    //get it slightly out of the corner
+    runMotor(7, 8, 9, 70);
+    runMotor(4, 5, 6, 0);
+    delay(100);
+
+    runMotor(7, 8, 9, motorOutput0);
+    runMotor(4, 5, 6, motorOutput1); 
+}
 
 double solveForInput0(double desiredSpeed){
   return (5 * desiredSpeed + 167.233) / 28.2959;
