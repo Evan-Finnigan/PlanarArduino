@@ -133,6 +133,8 @@ void loop() {
       if(k == 0){
         //count and both speeds reported in a python list
         Serial.print("[");
+        Serial.print(currTime);
+        Serial.print(",");
         Serial.print(testValue);
         Serial.print(",");
         Serial.print(filteredSpeed0);
@@ -280,7 +282,7 @@ void corner(){
 
     //get it slightly out of the corner
     runMotor(4, 5, 6, 70);
-    delay(1000);
+    delay(200);
 
     runMotor(7, 8, 9, motorOutput0);
     runMotor(4, 5, 6, motorOutput1); 
