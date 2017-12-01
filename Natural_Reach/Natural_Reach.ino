@@ -107,6 +107,8 @@ void setup() {
 
   corner();
   corner();
+  Serial.print("hi"); 
+  goToCenter();
 }
 
 void loop() { 
@@ -141,45 +143,49 @@ void loop() {
       Serial.print(SToX(degree0, degree1));
       Serial.print(",");
       Serial.println(SToY(degree0, degree1));
+    }else if(commandChar == 'c'){
+      goToCenter();
     }
    }
-  
-  if (!(digitalRead(10) == HIGH || digitalRead(11) == HIGH || digitalRead(12) == HIGH || digitalRead(13) == HIGH)) {
+
+ if (!(digitalRead(10) == HIGH || digitalRead(11) == HIGH || digitalRead(12) == HIGH || digitalRead(13) == HIGH)) {
+    double timeSinceStart = millis() - startTime;
     updatePWM1();
     updatePWM0();
 
-    double timeSinceStart = millis() - startTime;
-
-    //find how far along the device is 
-    //double millis0 = inverseLogistic(currC, currD, degree0 / (setpoint.x - startpoint.x));
-    //double millis1 = inverseLogistic(currC, currD, degree1 / (setpoint.y - startpoint.y));
 
     //find how fast the device should go for the next 10 ms
-    double speed0 = (setpoint.x - startpoint.x) * (logistic(currC, currD, (timeSinceStart + pausetime)/1000) - logistic(currC, currD, timeSinceStart/1000)) / (pausetime / 1000);
-    double speed1 = (setpoint.y - startpoint.y) * (logistic(currC, currD, (timeSinceStart + pausetime)/1000) - logistic(currC, currD, timeSinceStart/1000)) / (pausetime / 1000);
-    //Serial.print(speed0);
-    //Serial.print(",");
-    //Serial.println(speed1);
+    double speed0 = (setpoint.x - startpoint.x) * (logistic(currC, currD, (timeSinceStart + pausetime)) - logistic(currC, currD, timeSinceStart)) / (pausetime / 1000);
+    double speed1 = (setpoint.y - startpoint.y) * (logistic(currC, currD, (timeSinceStart + pausetime)) - logistic(currC, currD, timeSinceStart)) / (pausetime / 1000);
+    
     //calculate required motor outputs from desired speed, this is now open loop control
-    motorOutput0 = solveForInput0(speed0, speed1); 
-    motorOutput1 = solveForInput1(speed0, speed1); 
+    motorOutput0 = speedToPWM0(speed0); 
+    motorOutput1 = speedToPWM0(speed1); 
 
-    runMotor(7, 8, 9, motorOutput0);
-    runMotor(4, 5, 6, motorOutput1);
+//    Serial.print(speed0);
+//    Serial.print(",");
+//    Serial.print(speed1);
+//    Serial.print(","); 
+//    Serial.print(motorOutput0);
+//    Serial.print(",");
+//    Serial.println(motorOutput1);
+
+    runMotor(7, 8, 9, motorOutput0, 255);
+    runMotor(4, 5, 6, motorOutput1, 255);
     delay(pausetime);
    } else {
-     runMotor(7,8,9,0);
-     runMotor(4,5,6,0); 
+     runMotor(7,8,9,0, 255);
+     runMotor(4,5,6,0, 255); 
    }
   }
 
 //pins 1 and 2 are the direction pins and pin3 is the pwm pin
-void runMotor(int pin1, int pin2, int pin3, double value){
-  if(value > 255){
-     value = 255;
+void runMotor(int pin1, int pin2, int pin3, double value, double throttle){
+  if(value > throttle){
+     value = throttle;
   }
-  if(value < -255){
-     value = -255;
+  if(value < -throttle){
+     value = -throttle;
   }
   if(abs(value) < 40){
     value = 0; 
@@ -276,14 +282,14 @@ void falling0() {
 
 void corner(){
     //put the carriage in the corner    
-    runMotor(7, 8, 9, threshold);
-    runMotor(4, 5, 6, -threshold);
+    runMotor(7, 8, 9, threshold, 55);
+    runMotor(4, 5, 6, -threshold, 55);
     while(digitalRead(12) != HIGH){
         delay(10);
     }  
 
-    runMotor(7, 8, 9, -threshold);
-    runMotor(4, 5, 6, -threshold);
+    runMotor(7, 8, 9, -threshold, 55);
+    runMotor(4, 5, 6, -threshold, 55);
     while(digitalRead(10) != HIGH){
         delay(10);
     }  
@@ -291,24 +297,33 @@ void corner(){
     motorOutput0 = 0;
     motorOutput1 = 0;
 
-    runMotor(7, 8, 9, motorOutput0);
-    runMotor(4, 5, 6, motorOutput1); 
+    runMotor(7, 8, 9, motorOutput0, 55);
+    runMotor(4, 5, 6, motorOutput1, 55); 
 
     //get it slightly out of the corner
-    runMotor(4, 5, 6, threshold);
+    runMotor(4, 5, 6, threshold, 55);
     delay(500);
 
-    runMotor(7, 8, 9, motorOutput0);
-    runMotor(4, 5, 6, motorOutput1); 
+    runMotor(7, 8, 9, motorOutput0, 55);
+    runMotor(4, 5, 6, motorOutput1, 55); 
 }
 
-
-double solveForInput0(double desiredSpeed0, double desiredSpeed1){
-  return .606 * desiredSpeed0 + .006 * desiredSpeed1;
+double speedToPWM0(double speed) {
+  double speedAbs = abs(speed); 
+  double toReturn = - 1.0 / .0145 * log((speedAbs - 1223.0) / (331.9 - 1223.0)) + 50.0; 
+  if (speed < 0) {
+    toReturn = -toReturn;
+  }
+  return toReturn;
 }
 
-double solveForInput1(double desiredSpeed0, double desiredSpeed1){
-  return .033 * desiredSpeed0 + .807 * desiredSpeed1; 
+double speedToPWM1(double speed) {
+  double speedAbs = abs(speed);
+  double toReturn =  -1.0 / .0127 * log((speedAbs - 1238.0) / (276.9 - 1238.0)) + 40.0; 
+  if (speed < 0) {
+    toReturn = -toReturn; 
+  }
+  return toReturn; 
 }
 
 double calcC(double time) {
@@ -335,7 +350,6 @@ point_t readPoint() {
   double inputy = 0; 
   double inputvx = 0;
   double inputvy = 0;
-  char sign;
   char curr = Serial.read();
             //first value
             while (curr != '.' && curr != ',') {
@@ -373,15 +387,14 @@ point_t readPoint() {
 
             //third number
             power = .1;
-            sign = Serial.read();
             curr = Serial.read();
-            while (curr != '.' && curr != ',') {
+            while (curr != '.' && curr != '\n') {
               inputvx *= 10;
               inputvx += curr - 48;
               curr = Serial.read();
             }
             
-            while (curr != ',') {
+            while (curr != '\n') {
               if(curr != '.'){
                 in = (curr - 48);
                 inputvx += in * power;
@@ -389,39 +402,18 @@ point_t readPoint() {
               }
               curr = Serial.read();
             }
-
-            if(sign == '-'){
-              inputvx = -inputvx;
-            }
-
-            //fourth number
-            power = .1;
-            sign = Serial.read();
-            curr = Serial.read();
-            while (curr != '.' && curr != '\n') {
-              inputvy *= 10;
-              in = curr - 48;
-              inputvy += in;
-              curr = Serial.read();
-            }
-            
-            while (curr != '\n') {
-              if(curr != '.'){
-                in = curr - 48;
-                inputvy += in * power;
-                power = power / 10; 
-              }
-              curr = Serial.read();
-            }
-            
-            if(sign == '-'){
-              inputvy = -inputvy;
-            }
             
             ret.x = inputx;
             ret.y = inputy; 
             ret.vx = inputvx;
             ret.vy = inputvy;
+
+            Serial.print(ret.x);
+            Serial.print(",");
+            Serial.print(ret.y);
+            Serial.print(",");
+            Serial.print(ret.vx);
+            Serial.print(",");
             
             return ret;
 }
@@ -441,4 +433,66 @@ double SToX(double s0, double s1){
 double SToY(double s0 , double s1){
   return (s1 - s0) * (DIAMETER * PI) / 360 / 2;
 }
+
+void goToCenter(){
+  int safe = 1;
+
+  //this is the defined center
+  double set0 = XYToS0(115, 95);
+  double set1 = XYToS1(115, 95);
+
+  //PWM values 
+  double P0 = 5;
+  double P1 = 5;
+
+  //error values 
+  updatePWM0();
+  updatePWM1();
+  
+  double p0 = set0 - degree0;
+  double p1 = set1 - degree1;
+
+  
+
+  while(p0 > 3 || p1 > 3){
+    //Checks that the limit switches are not pushed and that the curren limit is not exceeded (indicating an unsafe torque)
+    if(digitalRead(10) == HIGH || digitalRead(11) == HIGH || digitalRead(12) == HIGH || digitalRead(13) == HIGH) {
+      safe = 0;
+      /*Serial.print(digitalRead(10));
+      Serial.print(","); 
+      Serial.print(digitalRead(11)); 
+      Serial.print(",");
+      Serial.print(digitalRead(12)); 
+      Serial.print(",");
+      Serial.println(digitalRead(13));*/ 
+    }
+    if(safe == 1){
+      //Serial.println("hello"); 
+      //rollover
+      updatePWM0();
+      updatePWM1();
+      
+      p0 = set0 - degree0;
+    
+      p1 = set1 - degree1;
+
+      motorOutput0 = P0 * p0;
+      motorOutput1 = P1 * p1;
+
+      
+      Serial.print(SToX(degree0, degree1));
+      Serial.print(",");
+      Serial.println(SToY(degree0, degree1)); 
+      //output the control values to the motors
+      runMotor(7, 8, 9, motorOutput0, 55);
+      runMotor(4, 5, 6, motorOutput1, 55); 
+    } else {
+      runMotor(7, 8, 9, 0, 55);
+      runMotor(4, 5, 6, 0, 55);
+    }
+  }
+  Serial.println("done");
+}
+
+
 
