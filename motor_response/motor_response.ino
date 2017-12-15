@@ -78,7 +78,7 @@ void loop() {
 //    }
 
     counter = (counter + 1) % 10;
-    //Serial.println(filteredSpeed);
+    Serial.println(speed);
     
     delay(10); 
    } else {
@@ -174,13 +174,25 @@ void corner(){
 
 //attempt at butterworth filtering
 double butterworth(double newin, double * ins, double * outs) {
-  ins[0], ins[1], ins[2], ins[3], ins[4], ins[5], ins[6] = ins[1], ins[2], ins[3], ins[4], ins[5], ins[6], newin;
-
-  
+  ins[0] = ins[1];
+  ins[1] = ins[2];
+  ins[2] = ins[3];
+  ins[3] = ins[4];
+  ins[4] = ins[5];
+  ins[5] = ins[6];
+  ins[6] = newin;
   
   double newout = .0003 * ins[6] + .002 * ins[5] + .0051 * ins[4] + .0068 * ins[3] + .0051 * ins[2] + .002 * ins[1] + .0003 * ins[0] + 
                     1 * outs[6] - 3.579 * outs[5] + 5.6587 * outs[4] - 4.9654 * outs[3] + 2.5295 * outs[2] - .7053 * outs[1] + .0838 * outs[0];
-  outs[0], outs[1], outs[2], outs[3], outs[4], outs[5], outs[6] = outs[1], outs[2], outs[3], outs[4], outs[5], outs[6], newout; 
+
+  outs[0] = outs[1];
+  outs[1] = outs[2];
+  outs[2] = outs[3];
+  outs[3] = outs[4];
+  outs[4] = outs[5];
+  outs[5] = outs[6];
+  outs[6] = newout;
+  
   return newout;          
 }
 
