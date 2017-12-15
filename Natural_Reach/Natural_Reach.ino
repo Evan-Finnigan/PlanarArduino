@@ -493,6 +493,3 @@ void goToCenter(){
   }
   Serial.println("done");
 }
-
-
-
