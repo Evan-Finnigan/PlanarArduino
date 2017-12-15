@@ -23,10 +23,10 @@ int index = 0;
 int flag = 0;
 int voltage = 70; 
 unsigned long count = 0; 
-double  outs0[] = {0,0,0,0,0,0,0};
-double  ins0[] = {0,0,0,0,0,0,0};
-double  outs1[] = {0,0,0,0,0,0,0};
-double  ins1[] = {0,0,0,0,0,0,0};
+double  outs0[] = {0,0,0};
+double  ins0[] = {0,0,0};
+double  outs1[] = {0,0,0};
+double  ins1[] = {0,0,0};
 
 int testOutput = 0;
 
@@ -78,7 +78,7 @@ void loop() {
 //    }
 
     counter = (counter + 1) % 10;
-    Serial.println(speed);
+    Serial.println(filteredSpeed);
     
     delay(10); 
    } else {
@@ -174,26 +174,12 @@ void corner(){
 
 //attempt at butterworth filtering
 double butterworth(double newin, double * ins, double * outs) {
-  ins[0] = ins[1];
-  ins[1] = ins[2];
-  ins[2] = ins[3];
-  ins[3] = ins[4];
-  ins[4] = ins[5];
-  ins[5] = ins[6];
-  ins[6] = newin;
-  
-  double newout = .0003 * ins[6] + .002 * ins[5] + .0051 * ins[4] + .0068 * ins[3] + .0051 * ins[2] + .002 * ins[1] + .0003 * ins[0] + 
-                    1 * outs[6] - 3.579 * outs[5] + 5.6587 * outs[4] - 4.9654 * outs[3] + 2.5295 * outs[2] - .7053 * outs[1] + .0838 * outs[0];
-
-  outs[0] = outs[1];
-  outs[1] = outs[2];
-  outs[2] = outs[3];
-  outs[3] = outs[4];
-  outs[4] = outs[5];
-  outs[5] = outs[6];
-  outs[6] = newout;
-  
-  return newout;          
+    double newout = .0134 * newin + .0267 * ins[1] + .0134 * ins[0] - (-1.6475 * outs[1] + .7009 * outs[0]);
+    ins[0] = ins[1];
+    ins[1] = newin;
+    outs[0] = outs[1];
+    outs[1] = newout;
+    return newout; 
 }
 
 
