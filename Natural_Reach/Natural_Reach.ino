@@ -162,6 +162,13 @@ void loop() {
     motorOutput0 = speedToPWM0(speed0); 
     motorOutput1 = speedToPWM0(speed1); 
 
+    updatePWM0();
+    updatePWM1();
+
+    Serial.print(degree0);
+    Serial.print(",");
+    Serial.println(degree1);
+
 //    Serial.print(speed0);
 //    Serial.print(",");
 //    Serial.print(speed1);
@@ -284,13 +291,13 @@ void corner(){
     //put the carriage in the corner    
     runMotor(7, 8, 9, threshold, 55);
     runMotor(4, 5, 6, -threshold, 55);
-    while(digitalRead(12) != HIGH){
+    while(digitalRead(11) != HIGH){
         delay(10);
     }  
 
     runMotor(7, 8, 9, -threshold, 55);
     runMotor(4, 5, 6, -threshold, 55);
-    while(digitalRead(10) != HIGH){
+    while(digitalRead(13) != HIGH){
         delay(10);
     }  
     

@@ -92,8 +92,8 @@ void setup() {
   /* initialize serial                                       */
   Serial.begin(115200);
   //attach interrupt to digital pin 2 and 3
-  attachInterrupt(0, rising0, RISING);
-  attachInterrupt(1, rising1, RISING);
+  attachInterrupt(digitalPinToInterrupt(18), rising0, RISING);
+  attachInterrupt(digitalPinToInterrupt(19), rising1, RISING);
 
   //put the carriage in the corner
   corner();
@@ -164,10 +164,19 @@ void loop() {
           runMotor(7, 8, 9, motorOutput0);
           runMotor(4, 5, 6, motorOutput1);
 
+          //test encoder
+          //runMotor(7, 8, 9, 0);
+          //runMotor(4, 5, 6, 0);
+
           if(count == 0){
-            Serial.print(SToX(degree0, degree1 ));
+//            Serial.print(SToX(degree0, degree1 ));
+//            Serial.print(",");
+//            Serial.println(SToY(degree0, degree1)); 
+            //pin2
+            Serial.print(degree0);
             Serial.print(",");
-            Serial.println(SToY(degree0, degree1)); 
+            //pin3
+            Serial.println(degree1); 
           }  
   } else {
           runMotor(7, 8, 9, 0);
@@ -262,21 +271,21 @@ void updatePWM1(){
 }
 
 void rising0() {
-  attachInterrupt(0, falling0, FALLING);
+  attachInterrupt(digitalPinToInterrupt(18), falling0, FALLING);
   prev_time0 = micros();
 }
  
 void falling0() {
-  attachInterrupt(0, rising0, RISING);
+  attachInterrupt(digitalPinToInterrupt(18), rising0, RISING);
   pwm_value0 = micros()-prev_time0;
 }
 void rising1() {
-  attachInterrupt(1, falling1, FALLING);
+  attachInterrupt(digitalPinToInterrupt(19), falling1, FALLING);
   prev_time1 = micros();
 }
  
 void falling1() {
-  attachInterrupt(1, rising1, RISING);
+  attachInterrupt(digitalPinToInterrupt(19), rising1, RISING);
   pwm_value1 = micros()-prev_time1;
 }
 
@@ -285,7 +294,7 @@ void corner(){
     //put the carriage in the corner
     runMotor(7, 8, 9, threshold);
     runMotor(4, 5, 6, -threshold);
-    while(digitalRead(12) != HIGH){
+    while(digitalRead(11) != HIGH){
         delay(10);
     }
 
@@ -293,7 +302,7 @@ void corner(){
 
     runMotor(7, 8, 9, -threshold);
     runMotor(4, 5, 6, -threshold);
-    while(digitalRead(10) != HIGH){
+    while(digitalRead(13) != HIGH){
         delay(10);
     }  
     motorOutput0 = 0;
